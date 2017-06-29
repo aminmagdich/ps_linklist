@@ -105,6 +105,24 @@ class LinkBlockPresenter
         return $staticLinks;
     }
 
+    private function isExternalLink($url) 
+    {
+        $components = parse_url($url);
+        $domain=$_SERVER['HTTP_HOST'];
+        $subDomain='.'.$domain;
+        // we will treat url like '/relative.php' as relative
+        if ( empty($components['host']) )
+        {
+            return false;
+        }
+        if ( strcasecmp($components['host'], $domain) === 0 )
+        {
+            return false;
+        }
+        // check if the url host is a subdomain
+        return strrpos(strtolower($components['host']), $subDomain) !== strlen($components['host']) - strlen($subDomain);
+    }
+
     private function makeCustomLinks($customContent)
     {
         $customLinks = array();
@@ -114,16 +132,16 @@ class LinkBlockPresenter
 
             $customLinks = array_map(function ($el) {
                 return array(
-                    'id' => 'link-custom-page-'.$el['title'],
-                    'class' => 'custom-page-link',
-                    'title' => $el['title'],
-                    'description' => '',
-                    'url' => $el['url'],
+                  'id' => 'link-custom-page-'.$el['title'],
+                  'class' => 'custom-page-link',
+                  'title' => $el['title'],
+                  'target' => $this->isExternalLink($el['url']),
+                  'description' => '',
+                  'url' => $el['url'],
                 );
             },
-            array_filter($customLinks));
+              array_filter($customLinks));
         }
-
         return $customLinks;
     }
 }
